@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="/common/ref::commonHead('Base')" th:remove="all">
+</head>
+<body class="iframe_content">
+<ul>
+  <li th:each="item,menuInfo:${menuList}"
+      th:href="${item.key}"
+      th:text="${item.value}"></li>
+</ul>
+<h3>test</h3>
+<a href="javascript:caculateFrameHeight()">11111111111111</a>
+</body>
+
+</html>

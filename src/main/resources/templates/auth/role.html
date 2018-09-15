@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="/common/ref::commonHead('角色管理')" th:remove="all">
+</head>
+<body id="iframe_content" class="easyui-layout">
+<!--数据表格-->
+<table id="dg"></table>
+<!--表格顶部工具栏-->
+<div id="toolbar" style="height: 36px;">
+  <!--右侧数据操作区域-->
+  <div style="margin-top:2px;float:right;">
+    <a href="#" class="easyui-linkbutton " iconCls="icon-add" plain="true"
+       onclick="newData()">新增</a>
+    <a href="#" class="easyui-linkbutton " iconCls="icon-edit" plain="true"
+       onclick="editData()">编辑</a>
+  </div>
+  <!--左侧数据查询条件区域-->
+  <div style="margin-top:2px;">
+    <span class="search-label">角色名:</span>
+    <input id="searchRoleName" class="easyui-textbox" prompt="模糊匹配"
+           style="width: 100px">
+    <span class="search-label">角色状态:</span>
+    <select id="searchState" class="easyui-combobox" panelHeight="auto" style="width:100px"
+            data-options="editable:false">
+      <option value="99">全部</option>
+      <option value="0">未启用</option>
+      <option value="1">正常</option>
+      <option value="2">停用</option>
+    </select>
+    <span class="search-label">数据状态:</span>
+    <select id="searchValid" class="easyui-combobox" panelHeight="auto" style="width:100px"
+            data-options="editable:false">
+      <option value="1">启用</option>
+      <option value="0">停用</option>
+    </select>
+    <a href="#" class="easyui-linkbutton" iconCls="icon-search" plain="true"
+       onclick="doSearch()"></a>
+  </div>
+</div>
+<!--没有数据显示信息-->
+<div id="searchStatus" style="text-align: center;width:90%;margin-top: 20px">
+  <span style="font-size: larger;font-weight: bold;color: darkred">没有符合要求的数据</span>
+</div>
+<!--登录及编辑窗体-->
+<div id="dataForm" class="easyui-dialog" style="width:600px;height:380px;padding:10px 20px"
+     closed="true" buttons="#dlg-buttons"
+     data-options="modal:true">
+  <form id="fm" method="post">
+    <input id="id" name="id" type="hidden"/>
+    <input id="valid" name="valid" type="hidden"/>
+    <div class="form-item">
+      <label for="roleName" class="label-top">角色名：</label>
+      <input id="roleName" name="roleName"
+             class="easyui-validatebox easyui-textbox" prompt="请输入角色名"
+             data-options="required:true,
+                             validType:'length[3,20]',
+                             iconCls:'fa fa-user',
+                             iconAlign:'left'">
+    </div>
+    <div class="form-item">
+      <label for="state" class="label-top">角色状态：</label>
+      <select id="state" name="state"
+              class="easyui-combobox" panelHeight="auto"
+              data-options="editable:false">
+        <option value="0">未启用</option>
+        <option value="1" selected>正常</option>
+        <option value="2">锁定</option>
+      </select>
+    </div>
+    <div class="form-item" style="width: 100%;">
+      <label for="description" class="label-top">描述：</label>
+      <input id="description" name="description"
+             class="easyui-textbox" prompt="请输入描述"
+             data-options="multiline:true"
+             style="width:81%;height:100px">
+    </div>
+
+    <div class="form-item" style="width: 100%;">
+      <label for="remark" class="label-top">备注：</label>
+      <input id="remark" name="remark"
+             class="easyui-textbox" prompt="请输入备注"
+             data-options="multiline:true"
+             style="width:81%;height:100px">
+    </div>
+  </form>
+</div>
+<div id="dlg-buttons">
+  <a id="btnSave" href="#" class="easyui-linkbutton primary" iconCls="icon-ok"
+     onclick="saveData('保存成功')">保 存</a>
+  <a id="btnResetValid" href="#" class="easyui-linkbutton primary" iconCls="icon-undo"
+     onclick="resetValid()">恢 复</a>
+  <a id="btnDelete" href="#" style="float:left" class="easyui-linkbutton error"
+     iconCls="icon-cancel" onclick="deleteData()">删 除</a>
+</div>
+
+<script>
+  var method = "";
+  var baseUrl = '/auth/roles';
+  var url = "";
+
+  // datagrid 相关操作
+  $("#dg").datagrid({
+    // title: '角色信息管理',
+    idField: 'id',
+    url: baseUrl,
+    method: 'get',
+    pagination: true,//表示在datagrid设置分页
+    rownumbers: true,
+    singleSelect: true,
+    striped: true,
+    nowrap: true,
+    fitColumns: true,
+    scrollbarSize: 0,
+    remoteSort: false,
+    pageSize: 20,
+    pageList: [20, 50, 100],
+    border: true,
+    collapsible: false,
+    toolbar: '#toolbar',
+    queryParams: {
+      roleName: $('#searchRoleName').val(),
+      state: $('#searchState').val(),
+      valid: $('#searchValid').val()
+    },
+    onLoadSuccess: function (data) {
+      if (data.total === 0) {
+        $(this).closest('div.datagrid-wrap').find('div.datagrid-pager').hide();
+        $("#searchStatus").show();
+      }
+      //如果通过调用reload方法重新加载数据有数据时显示出分页导航容器
+      else {
+        $(this).closest('div.datagrid-wrap').find('div.datagrid-pager').show();
+        $("#searchStatus").hide();
+      }
+
+    },
+    onLoadError: function (result) {
+      $(this).closest('div.datagrid-wrap').find('div.datagrid-pager').hide();
+      $("#searchStatus").show();
+      $.messager.alert('错误信息', result.responseText, 'error');
+    },
+    columns: [
+      [
+        {field: 'roleName', title: '角色名', width: 1000, align: 'center', fixed: false},
+        {
+          field: 'state', title: '角色状态', width: 600, align: 'center', fixed: false,
+          formatter: function (value, row, index) {
+            return FormatUtils.getUserState(value)
+          }
+        },
+        {
+          field: 'valid', title: '数据状态', width: 600, align: 'center', fixed: false,
+          formatter: function (value, row, index) {
+            return FormatUtils.getDataValid(value)
+          }
+        },
+        {field: 'description', title: '角色描述', width: 3000, align: 'center', fixed: false},
+        {field: 'updatedTime', title: '修改日期', width: 1200, align: 'center', fixed: false},
+        {field: 'remark', title: '备注', width: 3600, fixed: false}
+      ]
+    ],
+    onDblClickRow: function (index, row) {
+      editData()
+    }
+  });
+
+  // 重新加载 按钮按下事件
+  $('#reloadButton').click(function () {
+    $("#dg").datagrid("reload",{});
+  });
+
+  // 搜索按钮按下事件
+  function doSearch(){
+    $('#dg').datagrid('load',{
+      roleName:$('#searchRoleName').val(),
+      state: $('#searchState').val(),
+      valid: $('#searchValid').val()
+    });
+  }
+
+  // 新增按钮按下事件
+  function newData(){
+    $('#dataForm').dialog('open').dialog('setTitle','新增角色');
+    $('#fm').form('reset');
+    method = 'post';
+    url = baseUrl;
+    //设定打开页面样式
+    $('#id').val("");
+    initForm();
+  }
+  // 编辑按钮按下事件
+  function editData() {
+    var row = $('#dg').datagrid('getSelected');
+    if (row){
+      $('#dataForm').dialog('open').dialog('setTitle','编辑角色');
+      $('#fm').form('load',row);
+      method = 'put';
+      url = baseUrl;
+      //设定打开页面样式
+      initForm();
+    }else {
+      $.messager.alert('错误信息',"未选择数据",'error');
+    }
+  }
+  // 保存按钮按下事件
+  function saveData(message) {
+    if($("#fm").form('validate'))
+    {
+      $.ajax({
+        type:method,
+        dataType:"json",
+        url:url,
+        data:$('#fm').serialize(),
+        beforeSend:ajaxLoading,
+        success:function (result) {
+          ajaxLoadEnd();
+          if(result.code === 1){
+            $.messager.alert('提示信息',message,'info');
+            $('#dataForm').dialog('close');
+            $('#dg').datagrid('reload');
+          }else{
+            $.messager.error('提示信息','保存未成功！'+result.msg,'info');
+          }
+        },
+        complete:ajaxLoadEnd,
+        error:function (result) {
+          $.messager.alert('错误信息','保存未成功！'+ result.responseText,'error');
+        }
+      });
+    }
+  }
+
+  // 删除按钮按下事件
+  function deleteData() {
+    $.messager.confirm("确认操作","确定要停用该条数据么？",function (result) {
+      if(result){
+        method = 'DELETE';
+        url = baseUrl +'/'+ $('#id').val();
+        saveData('该数据已成功删除')
+      }
+    })
+  }
+  // 数据恢复按钮按下事件
+  function resetValid() {
+    $.messager.confirm("确认操作","确定要恢复该条数据么？",function (result) {
+      if(result){
+        method = 'put';
+        url = baseUrl +'/reset';
+        saveData('用户已恢复，密码重置为jgt8888,并邮件通知该用户！')
+      }
+    })
+  }
+  // 编辑窗体初始化设置
+  function  initForm() {
+    // 获取 隐藏空间id和valid的值
+    var id = $('#id').val();
+    var valid = $('#valid').val() === "true";
+
+    // 全部按钮隐藏
+    $('#btnDelete').hide();
+    $('#btnResetValid').hide();
+    $('#btnSave').hide();
+
+    // roleName 不可修改
+    $('#roleName').textbox('textbox').attr('disabled', true);
+
+    // 当没有id时，属于新增数据的情况
+    // 新增数据时，只保留 保存按钮
+    if (id.length == 0) {
+      $('#btnSave').show();
+      $('#valid').val(true);
+      $('#roleName').textbox('textbox').attr('disabled', false);
+    }
+    // 编辑数据时并且未删除的场合
+    if (id.length > 0 && valid) {
+      $('#btnDelete').show();
+      $('#btnSave').show();
+    }
+
+    // 编辑用户信息时并且已经删除的场合
+    if (id.length > 0 && !valid) {
+      $('#btnResetValid').show();
+    }
+  }
+</script>
+</body>
+</html>

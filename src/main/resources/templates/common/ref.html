@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="commonHead(title)">
+  <meta charset="UTF-8">
+  <title th:text="${title}">Title</title>
+  <!--easyui-->
+  <script src="../static/easyui/jquery.min.js" th:src="@{/easyui/jquery.min.js}"
+          type="text/javascript" charset="utf-8"></script>
+  <script src="../static/easyui/jquery.easyui.min.js" th:src="@{/easyui/jquery.easyui.min.js}"
+          type="text/javascript" charset="utf-8"></script>
+  <script src="../static/easyui/locale/easyui-lang-zh_CN.js" th:src="@{/easyui/locale/easyui-lang-zh_CN.js}"
+          type="text/javascript" charset="utf-8"></script>
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icon.css}"/>
+  <!--字体图标-->
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/icons/css/font-awesome.min.css}"
+        href="../static/easyui/themes/icons/css/font-awesome.min.css" />
+  <!--皮肤-->
+  <link rel="stylesheet" type="text/css" th:href="@{/easyui/themes/gray/easyui.css}"
+        href="../static/easyui/themes/gray/easyui.css" />
+  <link rel="stylesheet" type="text/css" th:href="@{/css/superBlue.css}"
+        href="../static/css/superBlue.css" />
+  <script src="../static/js/super.js" th:src="@{/js/super.js}"
+          type="text/javascript" charset="utf-8"></script>
+
+
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="../static/css/app.css"/>
+  <script th:src="@{/js/formatUtils.js}" src="../static/js/formatUtils.js"
+          type="text/javascript" charset="utf-8"></script>
+  <script th:src="@{/js/app.js}" src="../static/js/app.js"
+          type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+
+</body>
+</html>
